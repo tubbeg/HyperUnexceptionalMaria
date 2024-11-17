@@ -1,0 +1,20 @@
+{
+  "name": "hyperunexceptionalmaria",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "dotnet fable watch --verbose --run npx vite",
+    "build": "dotnet fable"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "vite": "^5.4.11"
+  },
+  "dependencies": {
+    "miniplex": "^2.0.0"
+  }
+}
