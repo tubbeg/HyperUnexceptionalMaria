@@ -70,6 +70,8 @@ type Sprite (scene,x,y,texture,frame) =
         member this.height : int = jsNative
         member val name = "" with get,set
         member this.setOrigin x y  = jsNative
+        member this.setTint value = jsNative
+        member this.clearTint () = jsNative
         member this.setInteractive ()  = jsNative
     end
 
