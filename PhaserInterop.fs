@@ -37,12 +37,19 @@ type CameraManager () =
         member this.main : Camera = jsNative
     end
 
+[<Import("KeyboardPlugin","phaser")>]
+type Keyboard () =
+    class
+        member this.on (key : string) (fn : obj -> unit ) = jsNative
+    end
+    
 
 [<Import("InputPlugin","phaser")>]
 type Input () =
     class
         member this.setDraggable s b  = jsNative
         member this.on event (funct )  = jsNative
+        member this.keyboard : Keyboard = jsNative
     end
 
 [<Import("GameObject","phaser")>]
@@ -52,6 +59,18 @@ type IGameObject =
     abstract setData: k: string -> v: string ->   unit
     abstract getData : k : string ->  string
     abstract input : Input
+
+
+
+[<Import("Arcade.Body","phaser")>]
+type ArcadeBody () =
+    class
+        member this.allowGravity
+            with get () : bool = jsNative
+            and set (b : bool) = jsNative
+    end
+
+
 
 
 [<Import("Sprite","phaser")>]
@@ -64,6 +83,9 @@ type Sprite (scene,x,y,texture,frame) =
             member this.input = jsNative
         member val x = 0 with get,set
         member val y = 0 with get,set
+        //NOTE! THIS WILL NOT WORK WITH matter.js!!!
+        //REPLACE THE LINE BELOW WITH AN IMPORT FROM MATTER!
+        member this.body : ArcadeBody = jsNative
         member this.originX : int = jsNative
         member this.originy : int = jsNative
         member this.width : int = jsNative
@@ -73,6 +95,14 @@ type Sprite (scene,x,y,texture,frame) =
         member this.setTint value = jsNative
         member this.clearTint () = jsNative
         member this.setInteractive ()  = jsNative
+    end
+
+[<Import("SpriteWithDynamicBody","phaser")>]
+type DyanmicSprite (scene,x,y,texture,frame) =
+    class
+        inherit Sprite(scene, x ,y, texture, frame)
+        member this.setGravityY y  = jsNative
+        member this.setImmovable bool  = jsNative
     end
 
 [<Import("Container","phaser")>]
@@ -121,6 +151,32 @@ type TweenManager () =
         member this.add config = jsNative
     end
 
+[<Import("Arcade.Collider","phaser")>]
+type Collider () =
+    class
+    end
+
+
+[<Import("Arcade.Factory","phaser")>]
+type ArcadeFactory () =
+    class
+        member this.sprite x y (id : string) : DyanmicSprite = jsNative
+        member this.collider (a : IGameObject) (b : IGameObject) : Collider = jsNative
+    end
+
+[<Import("ArcadePhysics","phaser")>]
+type Physics () =
+    class
+        member this.add : ArcadeFactory = jsNative
+    end
+
+[<Import("Systems","phaser")>]
+type Systems () =
+    class
+        member this.canvas  = jsNative
+    end
+
+
 type SceneConfig = {key:string option;active:bool option;}
 
 [<Import("Scene","phaser")>]
@@ -129,7 +185,9 @@ type Scene (config : SceneConfig) =
         member this.add : ObjFactory = jsNative
         member this.load : Loader = jsNative
         member this.input : Input = jsNative
+        member this.physics : Physics = jsNative
         member this.cameras : CameraManager = jsNative
+        member this.sys : Systems = jsNative
         member this.tweens : TweenManager = jsNative
         abstract preload : unit -> unit 
         abstract create : unit -> unit 

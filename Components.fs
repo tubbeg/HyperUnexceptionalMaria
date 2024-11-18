@@ -10,22 +10,27 @@ type PositionComp = {x:float;y:float}
 type VelocityComp = {velocity:float}
 type HealthComp = {health:int}
 type SpriteComp = {sprite:Sprite}
-type MonsterComp = {monster:bool}
-type PlayerComp = {player:bool}
+type MonsterComp = {monster:string}
+type PlayerComp = {player:string}
+type GroundComp = {ground:string}
 
+//Phasers built in Sprite class keeps track of positioning
+//and also handles physics. No need for me to build
+//my own physics system
 type MonsterEntity =
-    {|position:PositionComp;
+    {|
     health:HealthComp;
-    velocity:VelocityComp;
+    sprite:SpriteComp;
     monster:MonsterComp|}
 
 type PlayerEntity =
-    {|position:PositionComp;
-    health:HealthComp;
-    velocity:VelocityComp;
+    {|health:HealthComp;
     player:PlayerComp;
     sprite:SpriteComp|}
 
+type GroundEntity =
+    {|ground:GroundComp;
+    sprite:SpriteComp|}
 
 (*
 due to the way that js works, querying any type is not a problem.
@@ -39,3 +44,7 @@ let queryMonsterEntities (w : World) : Query<MonsterEntity>  = jsNative
 
 [<Import("createPlayerQuery","./Queries.js")>]
 let queryPlayerEntities (w : World) : Query<PlayerEntity>  = jsNative
+
+
+[<Import("createGroundQuery","./Queries.js")>]
+let queryGroundEntities (w : World) : Query<GroundEntity>  = jsNative

@@ -5,6 +5,19 @@ open Config
 open Components
 open PhaserInterop
 
+
+(*
+This game is just supposed to be a very
+short platformer, essentially just to demo
+the functionality of F# Fable + Phaser + Arancini
+
+
+I will need at least 2 scenes:
+    * UI
+    * Game objects
+Maybe one additional scene for the environment
+*)
+
 let div = document.createElement "div"
 div.innerHTML <- "hello hello hello!"
 document.body.appendChild div |> ignore
@@ -13,46 +26,65 @@ let p  = {x=3;y=4}
 let h  = {health=75}
 let v = {velocity=1}
 
-let w =
-    let myWorld = new World()
-    let e : MonsterEntity = {|velocity=v;position=p;health=h;monster={monster=true}|}
-    myWorld.create e
-    myWorld
-
-let myMonsterQuery = queryMonsterEntities w
-
-let printQuery (a : MonsterEntity array) =
-    printfn "%A" a
-    console.log(a)
-    let printObject (e : MonsterEntity) =
-        printfn "Printing object"
-        console.log e
-    a |> Array.map(fun e -> (printObject e))
-
-printQuery myMonsterQuery.entities |> ignore
-
-
 let defaultConfig scene =
     conf (800,600) scene physics
 
-let addPlayerEntity (w : World) (factory : ObjFactory)  =
-    let x, y = 400, 400
-    let sprite = factory.sprite x y "player"
-    let player : PlayerEntity =    
-     {| position = {x=y;y=y};
-        health={health=100};
-        velocity={velocity=0};
-        player={player=true}
-        sprite={sprite=sprite}|}
+let addCollideToSprite (t : Scene) sprite w =
+    let groundEntities= queryGroundEntities w
+    let accFN (w : World) (e : GroundEntity) =
+        let c = t.physics.add.collider (e.sprite.sprite) sprite
+        w
+    //could do this function without fold, it's a side effect
+    groundEntities.entities |> Array.fold accFN w
+
+let addGroundEntitity pos (this : Scene)  (w : World) =
+    let x, y = pos
+    let id = "ground"
+    let sprite = 
+        this.physics.add.sprite x y id
+    sprite.setImmovable true
+    sprite.body.allowGravity <- false
+    sprite.x <- sprite.x + (sprite.width / 2)
+    let next = sprite.width + x
+    let player : GroundEntity =
+        let s = {sprite=sprite}
+        let g = {ground=id}
+        {|ground=g;sprite=s|}
     w.create player
-    w
+    w,next
 
-let initializeWorld factory   (w : World)  =
-    addPlayerEntity w factory
+[<Emit("$0.sys.canvas.width")>]
+let getSceneWidth scene : int = jsNative
 
-let systemCreatePlayer (w : World) =
-    ()
+let addGroundEntities (this : Scene)  (w : World) =
+    let width = getSceneWidth this
+    let initPos = (0, 550)
+    let rec age world p  =
+        let x,y = p
+        let newWorld,next = addGroundEntitity p  this world
+        match x with
+        | n when (n >= width) -> newWorld
+        | _ -> age newWorld (next, y)
+    age w initPos
 
+let addPlayerEntity (this : Scene) (w : World)  =
+    //I know that using this (the scene instance) is bad practice
+    //It would be a lot easier if Phaser was more functional-oriented
+    let x, y = 400, 400
+    let id = "player"
+    let sprite = 
+        this.physics.add.sprite x y id
+    sprite.setGravityY 50
+    let player : PlayerEntity =
+        let s = {sprite=sprite}
+        let p = {player=id}
+        let h = {health=100}
+        {|health=h;player=p;sprite=s|}
+    w.create player
+    addCollideToSprite this sprite w
+
+let initializeWorld this   (w : World)  =
+    w |> addGroundEntities this |> addPlayerEntity this
 
 let tintPlayer (p : PlayerEntity) =
     p.sprite.sprite.setTint "0xfb00ff"
@@ -75,17 +107,18 @@ let tintPlayersSystem (w : World option) isTint =
     | _ -> ()
     
 
-type MyScene (conf) =
+type ForegroundScene (conf) =
     inherit Scene(conf)
     let mutable world : World option = None
     let mutable timeTrigger : float = 0
     let mutable trigger = true
     override this.create (): unit =
-        let factory = this.add
-        world <- new World() |> initializeWorld factory |> Some
+        this.input.keyboard.on "keydown-A" (fun (e) -> (printfn "A is down! %A" e))
+        world <- new World() |> initializeWorld this |> Some
         ()
     override this.preload (): unit =
         this.load.image "player" "./MySprite.png"
+        this.load.image "ground" "./MySprite.png"
     override this.update (e: int) (dt: float): unit =
         timeTrigger <- timeTrigger + dt
         match timeTrigger with
@@ -95,11 +128,10 @@ type MyScene (conf) =
             tintPlayersSystem world trigger
         | _ -> ()
 
-
 let launchApp () =
     let sceneConf = {active=Some true;key=Some "MyScene"}
-    let c = defaultConfig [|(new MyScene(sceneConf))|]
+    let c = defaultConfig [|(new ForegroundScene(sceneConf))|]
     let app = new Game(c)
     ()
 
-launchApp ()
+launchApp () 

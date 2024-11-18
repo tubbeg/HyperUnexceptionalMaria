@@ -1,21 +1,31 @@
 
 
 /*
-{|position:PositionComp;
-  health:HealthComp;
-  velocity:VelocityComp;
-  monster:MonsterComp|}*/
+    {|
+    health:HealthComp;
+    sprite:SpriteComp;
+    monster:MonsterComp|}
+  */
 export function createMonsterQuery (w) {
-  const monsters = w.query((e) => e.all("health", "position", "velocity", "monster"));
+  const monsters = w.query((e) => e.all("health", "sprite","monster"));
   return monsters;
 }
 /*
-{|position:PositionComp;
-  health:HealthComp;
-  velocity:VelocityComp;
-  player:PlayerComp|}
+{    {|health:HealthComp;
+    player:PlayerComp;
+    sprite:SpriteComp|}
 */
 export function createPlayerQuery (w) {
-  const players = w.query((e) => e.all("health", "position", "velocity", "player"));
+  const players = w.query((e) => e.all("health", "sprite", "player"));
   return players;
+}
+
+/*
+    {|ground:GroundComp;
+    sprite:SpriteComp|}
+
+*/ 
+export function createGroundQuery (w) {
+  const g = w.query((e) => e.all("ground", "sprite"));
+  return g;
 }

@@ -2,7 +2,6 @@ module AranciniInterop
 open Fable.Core
 
 
-//due to the way that 
 
 [<Import("World","arancini")>]
 type World () =
